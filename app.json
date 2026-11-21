@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "recuprogra",
-    "slug": "recuprogra",
+    "name": "sesion4",
+    "slug": "sesion4",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "recuprogra",
+    "scheme": "sesion4",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"

@@ -38,7 +38,7 @@ export default function Solicitud() {
     setFechaDevolucion(formatearFecha(enTresDias));
   }
 
-  function solicitarPrestamo() {
+  async function solicitarPrestamo() {
     if (!id || !nombre) {
       Alert.alert('Atención', 'Selecciona un equipo desde el catálogo.');
       return;
@@ -105,7 +105,7 @@ export default function Solicitud() {
       return;
     }
 
-    const creado = crearPrestamo(
+    const creado = await crearPrestamo(
       String(id),
       String(nombre),
       fechaPrestamo.trim(),
@@ -113,7 +113,10 @@ export default function Solicitud() {
     );
 
     if (!creado) {
-      Alert.alert('Atención', 'Inicia sesión como estudiante para solicitar.');
+      Alert.alert(
+        'Atención',
+        'No se pudo crear la solicitud. Verifica tu sesión o la disponibilidad del equipo.'
+      );
       return;
     }
 

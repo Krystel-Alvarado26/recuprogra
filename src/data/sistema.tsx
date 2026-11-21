@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
-import { equipos as equiposIniciales } from './equipos';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { supabase } from './supabase';
 
 export type EstadoPrestamo = 'Pendiente' | 'Aprobado' | 'Rechazado' | 'Devuelto';
 
@@ -38,69 +38,130 @@ type RolUsuario = 'estudiante' | 'admin' | null;
 interface SistemaContextType {
   rol: RolUsuario;
   estudianteActual: Estudiante | null;
-  estudiantes: Estudiante[];
   equipos: Equipo[];
   prestamos: Prestamo[];
-  registrarEstudiante: (datos: Omit<Estudiante, 'id'>) => void;
-  login: (correo: string, contrasena: string) => 'admin' | 'estudiante' | 'error';
+  cargarDatos: () => Promise<void>;
+  registrarEstudiante: (
+    datos: Omit<Estudiante, 'id'>
+  ) => Promise<{ ok: boolean; mensaje?: string }>;
+  login: (
+    correo: string,
+    contrasena: string
+  ) => Promise<'admin' | 'estudiante' | 'error'>;
   cerrarSesion: () => void;
   crearPrestamo: (
     equipoId: string,
     equipoNombre: string,
     fechaPrestamo: string,
     fechaDevolucion: string
-  ) => boolean;
-  cambiarEstadoPrestamo: (prestamoId: string, nuevoEstado: EstadoPrestamo) => void;
+  ) => Promise<boolean>;
+  cambiarEstadoPrestamo: (
+    prestamoId: string,
+    nuevoEstado: EstadoPrestamo
+  ) => Promise<void>;
 }
-
-const estudianteDemo: Estudiante = {
-  id: 'est-1',
-  nombre: 'Estudiante de Prueba',
-  carnet: '0900-24-1234',
-  carrera: 'Ingeniería en Sistemas',
-  correo: 'estudiante@lab.com',
-  contrasena: '123',
-  foto: '👩‍🎓',
-};
 
 const SistemaContext = createContext<SistemaContextType | undefined>(undefined);
 
 export function SistemaProvider({ children }: { children: React.ReactNode }) {
   const [rol, setRol] = useState<RolUsuario>(null);
-  const [estudiantes, setEstudiantes] = useState<Estudiante[]>([estudianteDemo]);
   const [estudianteActual, setEstudianteActual] = useState<Estudiante | null>(null);
-  const [equipos, setEquipos] = useState<Equipo[]>(equiposIniciales);
+  const [equipos, setEquipos] = useState<Equipo[]>([]);
   const [prestamos, setPrestamos] = useState<Prestamo[]>([]);
 
-  function registrarEstudiante(datos: Omit<Estudiante, 'id'>) {
-    const nuevo: Estudiante = {
-      ...datos,
-      id: `est-${Date.now()}`,
-    };
-    setEstudiantes((prev) => [...prev, nuevo]);
-    setEstudianteActual(nuevo);
+  async function cargarDatos() {
+    const { data: eqData } = await supabase
+      .from('equipos')
+      .select('*')
+      .order('nombre', { ascending: true });
+
+    if (eqData) {
+      setEquipos(eqData);
+    }
+
+    const { data: preData } = await supabase
+      .from('prestamos')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (preData) {
+      const formateados: Prestamo[] = preData.map((p: any) => ({
+        id: p.id,
+        equipoId: p.equipo_id,
+        equipo: p.equipo_nombre,
+        usuarioCorreo: p.usuario_correo,
+        usuarioNombre: p.usuario_nombre,
+        usuarioCarnet: p.usuario_carnet,
+        fechaPrestamo: p.fecha_prestamo,
+        fechaDevolucion: p.fecha_devolucion,
+        estado: p.estado,
+      }));
+      setPrestamos(formateados);
+    }
   }
 
-  function login(correo: string, contrasena: string): 'admin' | 'estudiante' | 'error' {
+  useEffect(() => {
+    cargarDatos();
+  }, []);
+
+  async function registrarEstudiante(datos: Omit<Estudiante, 'id'>) {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .insert([
+        {
+          nombre: datos.nombre,
+          carnet: datos.carnet,
+          carrera: datos.carrera,
+          correo: datos.correo,
+          contrasena: datos.contrasena,
+          foto: datos.foto,
+          rol: 'estudiante',
+        },
+      ])
+      .select()
+      .single();
+
+    if (error || !data) {
+      return {
+        ok: false,
+        mensaje: error?.message.includes('duplicate')
+          ? 'Ese correo ya está registrado.'
+          : 'No se pudo registrar el usuario.',
+      };
+    }
+
+    setEstudianteActual(data);
+    return { ok: true };
+  }
+
+  async function login(
+    correo: string,
+    contrasena: string
+  ): Promise<'admin' | 'estudiante' | 'error'> {
     const correoLimpio = correo.trim().toLowerCase();
 
-    if (correoLimpio === 'admin@lab.com' && contrasena === 'admin123') {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('*')
+      .eq('correo', correoLimpio)
+      .eq('contrasena', contrasena)
+      .maybeSingle();
+
+    if (error || !data) {
+      return 'error';
+    }
+
+    await cargarDatos();
+
+    if (data.rol === 'admin') {
       setRol('admin');
       setEstudianteActual(null);
       return 'admin';
     }
 
-    const encontrado = estudiantes.find(
-      (est) => est.correo.toLowerCase() === correoLimpio && est.contrasena === contrasena
-    );
-
-    if (encontrado) {
-      setRol('estudiante');
-      setEstudianteActual(encontrado);
-      return 'estudiante';
-    }
-
-    return 'error';
+    setRol('estudiante');
+    setEstudianteActual(data);
+    return 'estudiante';
   }
 
   function cerrarSesion() {
@@ -108,7 +169,7 @@ export function SistemaProvider({ children }: { children: React.ReactNode }) {
     setEstudianteActual(null);
   }
 
-  function crearPrestamo(
+  async function crearPrestamo(
     equipoId: string,
     equipoNombre: string,
     fechaPrestamo: string,
@@ -116,44 +177,53 @@ export function SistemaProvider({ children }: { children: React.ReactNode }) {
   ) {
     if (!estudianteActual) return false;
 
-    const nuevoPrestamo: Prestamo = {
-      id: `pre-${Date.now()}`,
-      equipoId,
-      equipo: equipoNombre,
-      usuarioCorreo: estudianteActual.correo,
-      usuarioNombre: estudianteActual.nombre,
-      usuarioCarnet: estudianteActual.carnet,
-      fechaPrestamo,
-      fechaDevolucion,
-      estado: 'Pendiente',
-    };
+    const { error } = await supabase.from('prestamos').insert([
+      {
+        equipo_id: equipoId,
+        equipo_nombre: equipoNombre,
+        usuario_id: estudianteActual.id,
+        usuario_correo: estudianteActual.correo,
+        usuario_nombre: estudianteActual.nombre,
+        usuario_carnet: estudianteActual.carnet,
+        fecha_prestamo: fechaPrestamo,
+        fecha_devolucion: fechaDevolucion,
+        estado: 'Pendiente',
+      },
+    ]);
 
-    setPrestamos((prev) => [nuevoPrestamo, ...prev]);
+    if (error) return false;
+
+    await cargarDatos();
     return true;
   }
 
-  function cambiarEstadoPrestamo(prestamoId: string, nuevoEstado: EstadoPrestamo) {
-    setPrestamos((prev) =>
-      prev.map((item) => {
-        if (item.id !== prestamoId) return item;
+  async function cambiarEstadoPrestamo(
+    prestamoId: string,
+    nuevoEstado: EstadoPrestamo
+  ) {
+    const prestamoObjetivo = prestamos.find((p) => p.id === prestamoId);
+    if (!prestamoObjetivo) return;
 
-        // Si se aprueba, el equipo pasa a no disponible; si se devuelve o rechaza, vuelve a estar disponible
-        setEquipos((eqPrev) =>
-          eqPrev.map((eq) => {
-            if (eq.id !== item.equipoId) return eq;
-            if (nuevoEstado === 'Aprobado') {
-              return { ...eq, disponibilidad: false };
-            }
-            if (nuevoEstado === 'Devuelto' || nuevoEstado === 'Rechazado') {
-              return { ...eq, disponibilidad: true };
-            }
-            return eq;
-          })
-        );
+    const { error } = await supabase
+      .from('prestamos')
+      .update({ estado: nuevoEstado })
+      .eq('id', prestamoId);
 
-        return { ...item, estado: nuevoEstado };
-      })
-    );
+    if (error) return;
+
+    if (nuevoEstado === 'Aprobado') {
+      await supabase
+        .from('equipos')
+        .update({ disponibilidad: false })
+        .eq('id', prestamoObjetivo.equipoId);
+    } else if (nuevoEstado === 'Devuelto' || nuevoEstado === 'Rechazado') {
+      await supabase
+        .from('equipos')
+        .update({ disponibilidad: true })
+        .eq('id', prestamoObjetivo.equipoId);
+    }
+
+    await cargarDatos();
   }
 
   return (
@@ -161,9 +231,9 @@ export function SistemaProvider({ children }: { children: React.ReactNode }) {
       value={{
         rol,
         estudianteActual,
-        estudiantes,
         equipos,
         prestamos,
+        cargarDatos,
         registrarEstudiante,
         login,
         cerrarSesion,

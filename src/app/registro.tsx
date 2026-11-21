@@ -15,7 +15,7 @@ const AVATARES = ['👩‍🎓', '👨‍🎓', '🧑‍💻', '👩‍🔬', '�
 
 export default function Registro() {
   const router = useRouter();
-  const { registrarEstudiante, estudiantes } = useSistema();
+  const { registrarEstudiante } = useSistema();
 
   const [nombre, setNombre] = useState('');
   const [carnet, setCarnet] = useState('');
@@ -24,7 +24,7 @@ export default function Registro() {
   const [contrasena, setContrasena] = useState('');
   const [foto, setFoto] = useState('👩‍🎓');
 
-  function registrar() {
+  async function registrar() {
     if (
       nombre.trim() === '' ||
       carnet.trim() === '' ||
@@ -42,19 +42,14 @@ export default function Registro() {
     }
 
     if (contrasena.length < 6) {
-      Alert.alert('Atención', 'La contraseña debe tener al menos 6 caracteres.');
+      Alert.alert(
+        'Atención',
+        'La contraseña debe tener al menos 6 caracteres.'
+      );
       return;
     }
 
-    const existe = estudiantes.some(
-      (e) => e.correo.toLowerCase() === correo.trim().toLowerCase()
-    );
-    if (existe) {
-      Alert.alert('Atención', 'Ese correo ya está registrado.');
-      return;
-    }
-
-    registrarEstudiante({
+    const res = await registrarEstudiante({
       nombre: nombre.trim(),
       carnet: carnet.trim(),
       carrera: carrera.trim(),
@@ -63,9 +58,14 @@ export default function Registro() {
       foto,
     });
 
+    if (!res.ok) {
+      Alert.alert('Atención', res.mensaje || 'Error al registrar.');
+      return;
+    }
+
     Alert.alert(
       'Registro completado',
-      'Tu cuenta fue creada. Ahora puedes iniciar sesión.',
+      'Tu cuenta fue creada en Supabase. Ahora puedes iniciar sesión.',
       [
         {
           text: 'Aceptar',
@@ -161,10 +161,29 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F3F6FA' },
   contenido: { padding: 25, paddingTop: 45 },
   icono: { fontSize: 50, textAlign: 'center', marginBottom: 12 },
-  titulo: { fontSize: 25, fontWeight: 'bold', color: '#172B4D', textAlign: 'center' },
-  descripcion: { color: '#64748B', textAlign: 'center', marginTop: 10, marginBottom: 20 },
-  etiqueta: { color: '#334155', fontWeight: 'bold', marginTop: 13, marginBottom: 7 },
-  filaAvatares: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
+  titulo: {
+    fontSize: 25,
+    fontWeight: 'bold',
+    color: '#172B4D',
+    textAlign: 'center',
+  },
+  descripcion: {
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  etiqueta: {
+    color: '#334155',
+    fontWeight: 'bold',
+    marginTop: 13,
+    marginBottom: 7,
+  },
+  filaAvatares: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 5,
+  },
   opcionAvatar: {
     backgroundColor: 'white',
     borderWidth: 1,
@@ -175,7 +194,11 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 4,
   },
-  avatarSeleccionado: { borderColor: '#2456A6', borderWidth: 2, backgroundColor: '#DCE6F5' },
+  avatarSeleccionado: {
+    borderColor: '#2456A6',
+    borderWidth: 2,
+    backgroundColor: '#DCE6F5',
+  },
   textoAvatar: { fontSize: 26 },
   input: {
     backgroundColor: 'white',
@@ -193,5 +216,11 @@ const styles = StyleSheet.create({
     marginTop: 28,
   },
   textoBoton: { color: 'white', fontSize: 16, fontWeight: 'bold' },
-  volver: { color: '#2456A6', textAlign: 'center', marginTop: 20, marginBottom: 25, fontWeight: 'bold' },
+  volver: {
+    color: '#2456A6',
+    textAlign: 'center',
+    marginTop: 20,
+    marginBottom: 25,
+    fontWeight: 'bold',
+  },
 });

@@ -20,13 +20,13 @@ export default function InicioSesion() {
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
 
-  function iniciarSesion() {
+  async function iniciarSesion() {
     if (correo.trim() === '' || contrasena.trim() === '') {
       Alert.alert('Atención', 'Completa todos los campos.');
       return;
     }
 
-    const resultado = login(correo, contrasena);
+    const resultado = await login(correo, contrasena);
 
     if (resultado === 'admin') {
       router.replace('../admin');
@@ -104,12 +104,33 @@ const styles = StyleSheet.create({
   scroll: { flexGrow: 1, justifyContent: 'center', padding: 22 },
   encabezado: { alignItems: 'center', marginBottom: 35 },
   icono: { fontSize: 55, marginBottom: 10 },
-  titulo: { fontSize: 25, fontWeight: 'bold', color: '#172B4D', textAlign: 'center' },
+  titulo: {
+    fontSize: 25,
+    fontWeight: 'bold',
+    color: '#172B4D',
+    textAlign: 'center',
+  },
   subtitulo: { fontSize: 15, color: '#64748B', marginTop: 8 },
-  formulario: { backgroundColor: 'white', padding: 25, borderRadius: 18, elevation: 3 },
+  formulario: {
+    backgroundColor: 'white',
+    padding: 25,
+    borderRadius: 18,
+    elevation: 3,
+  },
   bienvenida: { fontSize: 25, fontWeight: 'bold', color: '#172B4D' },
-  descripcion: { fontSize: 14, color: '#64748B', marginTop: 8, marginBottom: 25 },
-  etiqueta: { fontSize: 14, fontWeight: 'bold', color: '#334155', marginBottom: 8, marginTop: 12 },
+  descripcion: {
+    fontSize: 14,
+    color: '#64748B',
+    marginTop: 8,
+    marginBottom: 25,
+  },
+  etiqueta: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#334155',
+    marginBottom: 8,
+    marginTop: 12,
+  },
   input: {
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
@@ -128,6 +149,11 @@ const styles = StyleSheet.create({
   textoBoton: { color: 'white', fontSize: 16, fontWeight: 'bold' },
   registro: { alignItems: 'center', marginTop: 22 },
   textoRegistro: { color: '#64748B', fontSize: 14 },
-  enlace: { color: '#2456A6', fontWeight: 'bold', marginTop: 7, fontSize: 15 },
+  enlace: {
+    color: '#2456A6',
+    fontWeight: 'bold',
+    marginTop: 7,
+    fontSize: 15,
+  },
   pie: { textAlign: 'center', color: '#94A3B8', fontSize: 11, marginTop: 25 },
 });

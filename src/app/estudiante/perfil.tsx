@@ -82,7 +82,12 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   icono: { fontSize: 55 },
-  nombre: { fontSize: 21, fontWeight: 'bold', color: '#172B4D', marginTop: 15 },
+  nombre: {
+    fontSize: 21,
+    fontWeight: 'bold',
+    color: '#172B4D',
+    marginTop: 15,
+  },
   rol: { color: '#64748B', marginTop: 5 },
   tarjeta: {
     backgroundColor: 'white',

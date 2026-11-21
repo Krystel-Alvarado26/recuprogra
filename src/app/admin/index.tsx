@@ -21,11 +21,13 @@ export default function InicioAdministrador() {
   const pendientes = prestamos.filter((p) => p.estado === 'Pendiente');
   const activos = prestamos.filter((p) => p.estado === 'Aprobado');
 
-  // Conteo de solicitudes por equipo para el reporte de más solicitados
-  const conteoPorEquipo = prestamos.reduce<Record<string, number>>((acc, item) => {
-    acc[item.equipo] = (acc[item.equipo] || 0) + 1;
-    return acc;
-  }, {});
+  const conteoPorEquipo = prestamos.reduce<Record<string, number>>(
+    (acc, item) => {
+      acc[item.equipo] = (acc[item.equipo] || 0) + 1;
+      return acc;
+    },
+    {}
+  );
 
   const reporteOrdenado = Object.entries(conteoPorEquipo).sort(
     (a, b) => b[1] - a[1]
@@ -36,18 +38,18 @@ export default function InicioAdministrador() {
     router.replace('/');
   }
 
-  function aprobar(prestamo: Prestamo) {
-    cambiarEstadoPrestamo(prestamo.id, 'Aprobado');
+  async function aprobar(prestamo: Prestamo) {
+    await cambiarEstadoPrestamo(prestamo.id, 'Aprobado');
     Alert.alert('Aprobado', `Préstamo de ${prestamo.equipo} aprobado.`);
   }
 
-  function rechazar(prestamo: Prestamo) {
-    cambiarEstadoPrestamo(prestamo.id, 'Rechazado');
+  async function rechazar(prestamo: Prestamo) {
+    await cambiarEstadoPrestamo(prestamo.id, 'Rechazado');
     Alert.alert('Rechazado', `Solicitud de ${prestamo.equipo} rechazada.`);
   }
 
-  function marcarDevuelto(prestamo: Prestamo) {
-    cambiarEstadoPrestamo(prestamo.id, 'Devuelto');
+  async function marcarDevuelto(prestamo: Prestamo) {
+    await cambiarEstadoPrestamo(prestamo.id, 'Devuelto');
     Alert.alert('Devuelto', `${prestamo.equipo} marcado como devuelto.`);
   }
 
@@ -74,7 +76,6 @@ export default function InicioAdministrador() {
           Selecciona una sección para administrar el sistema.
         </Text>
 
-        {/* Menú de secciones */}
         <View style={styles.menu}>
           <TouchableOpacity
             style={[
@@ -145,7 +146,6 @@ export default function InicioAdministrador() {
           </TouchableOpacity>
         </View>
 
-        {/* 1. SOLICITUDES PENDIENTES */}
         {vista === 'solicitudes' && (
           <View>
             {pendientes.length === 0 ? (
@@ -198,7 +198,6 @@ export default function InicioAdministrador() {
           </View>
         )}
 
-        {/* 2. PRÉSTAMOS ACTIVOS Y DEVOLUCIÓN */}
         {vista === 'activos' && (
           <View>
             {activos.length === 0 ? (
@@ -245,7 +244,6 @@ export default function InicioAdministrador() {
           </View>
         )}
 
-        {/* 3. HISTORIAL DE PRÉSTAMOS */}
         {vista === 'historial' && (
           <View>
             {prestamos.length === 0 ? (
@@ -280,7 +278,6 @@ export default function InicioAdministrador() {
           </View>
         )}
 
-        {/* 4. REPORTE DE EQUIPOS MÁS SOLICITADOS */}
         {vista === 'reportes' && (
           <View>
             {reporteOrdenado.length === 0 ? (

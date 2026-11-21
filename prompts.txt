@@ -1,0 +1,4 @@
+1. Ayúdame a diseñar las pantallas de la app de gestión de equipos de laboratorio en React Native con un estilo limpio, amigable y usando emojis en toda la página para que se vea bien ordenado.
+2. Dame el diseño visual y la estructura de las pantallas de inicio de sesión, registro, perfil del estudiante, catálogo, solicitud, mis préstamos y panel de administrador manteniendo un diseño simple y bonito.
+3. Ayúdame a hacer la conexión a Supabase para guardar usuarios, equipos y préstamos en la base de datos y que todo fluya bien entre las pantallas.
+4. Me está saliendo un error 401 en la consola al intentar iniciar sesión con la conexión a Supabase, ayúdame a revisar qué está fallando con la clave o la configuración.

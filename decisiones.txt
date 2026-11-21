@@ -1,0 +1,20 @@
+(a) Qué entendí del problema y qué tablas/modelos planeo:
+Entendí que se necesita una aplicación en React Native para gestionar el préstamo de equipos de laboratorio universitario con dos roles: Estudiante y Administrador. El estudiante debe poder registrarse, ver su perfil (nombre completo, carné, carrera y foto), 
+consultar el catálogo de equipos disponibles y solicitar préstamos con fecha de préstamo, fecha de devolución y estados Pendiente, Aprobado, Rechazado y Devuelto. 
+
+El administrador debe poder aprobar o rechazar solicitudes, ver préstamos activos, marcar equipos como devueltos y generar un reporte de equipos más solicitados.
+
+Para resolverlo, planeé tres modelos/tablas principales:
+- usuarios: almacena datos de estudiantes y administradores (nombre, carné, carrera, correo, contraseña, foto y rol).
+- equipos: almacena los equipos del laboratorio (nombre, descripción, imagen y disponibilidad).
+- prestamos: vincula cada solicitud con el usuario y el equipo, guardando fecha de préstamo, fecha de devolución y estado (Pendiente, Aprobado, Rechazado, Devuelto).
+
+(b) Qué partes se delegaron a la IA y por qué:
+A la IA le delegué sobre todo la parte gráfica y visual, como armar los diseños de las pantallas y poner cosas como emojis en toda la página para que se viera más amigable 
+y ordenado sin tardarme tanto diseñando. También le delegué el apoyo a la hora de hacer la conexión a Supabase y estructurar cómo enlazar los datos con las pantallas.
+Lo hice así para avanzar más rápido y concentrarme en probar que la app funcionara bien.
+
+(c) Al menos una cosa que la IA hizo mal o que tuve que corregir, y cómo se dio cuenta:
+Al momento de hacer la conexión a Supabase, se configuró esperando la clave anon normal, pero en mi proyecto de Supabase me aparecía una clave publishable (sb_publishable_...) y al probar
+la app me salían errores 401 en la consola. Me di cuenta revisando la consola del navegador donde marcaba el error 401 y comparando lo que había puesto en el archivo de Supabase 
+con la llave que me daba el panel.

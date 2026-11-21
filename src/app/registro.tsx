@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   View,
@@ -10,15 +9,20 @@ import {
   ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSistema } from '../data/sistema';
+
+const AVATARES = ['👩‍🎓', '👨‍🎓', '🧑‍💻', '👩‍🔬', '👨‍🔬'];
 
 export default function Registro() {
   const router = useRouter();
+  const { registrarEstudiante, estudiantes } = useSistema();
 
   const [nombre, setNombre] = useState('');
   const [carnet, setCarnet] = useState('');
   const [carrera, setCarrera] = useState('');
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
+  const [foto, setFoto] = useState('👩‍🎓');
 
   function registrar() {
     if (
@@ -38,16 +42,30 @@ export default function Registro() {
     }
 
     if (contrasena.length < 6) {
-      Alert.alert(
-        'Atención',
-        'La contraseña debe tener al menos 6 caracteres.'
-      );
+      Alert.alert('Atención', 'La contraseña debe tener al menos 6 caracteres.');
       return;
     }
 
+    const existe = estudiantes.some(
+      (e) => e.correo.toLowerCase() === correo.trim().toLowerCase()
+    );
+    if (existe) {
+      Alert.alert('Atención', 'Ese correo ya está registrado.');
+      return;
+    }
+
+    registrarEstudiante({
+      nombre: nombre.trim(),
+      carnet: carnet.trim(),
+      carrera: carrera.trim(),
+      correo: correo.trim().toLowerCase(),
+      contrasena,
+      foto,
+    });
+
     Alert.alert(
       'Registro completado',
-      'El formulario está correcto. Próximamente guardaremos tus datos en Supabase.',
+      'Tu cuenta fue creada. Ahora puedes iniciar sesión.',
       [
         {
           text: 'Aceptar',
@@ -60,15 +78,29 @@ export default function Registro() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.contenido}>
-        <Text style={styles.icono}>👩‍🎓</Text>
+        <Text style={styles.icono}>{foto}</Text>
 
-        <Text style={styles.titulo}>
-          Registro de estudiante
-        </Text>
+        <Text style={styles.titulo}>Registro de estudiante</Text>
 
         <Text style={styles.descripcion}>
           Completa tus datos para crear tu cuenta.
         </Text>
+
+        <Text style={styles.etiqueta}>Foto / Avatar de perfil</Text>
+        <View style={styles.filaAvatares}>
+          {AVATARES.map((item) => (
+            <TouchableOpacity
+              key={item}
+              style={[
+                styles.opcionAvatar,
+                foto === item && styles.avatarSeleccionado,
+              ]}
+              onPress={() => setFoto(item)}
+            >
+              <Text style={styles.textoAvatar}>{item}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         <Text style={styles.etiqueta}>Nombre completo</Text>
         <TextInput
@@ -113,19 +145,12 @@ export default function Registro() {
           secureTextEntry
         />
 
-        <TouchableOpacity
-          style={styles.boton}
-          onPress={registrar}
-        >
-          <Text style={styles.textoBoton}>
-            Crear cuenta
-          </Text>
+        <TouchableOpacity style={styles.boton} onPress={registrar}>
+          <Text style={styles.textoBoton}>Crear cuenta</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.volver}>
-            Volver al inicio de sesión
-          </Text>
+          <Text style={styles.volver}>Volver al inicio de sesión</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -133,43 +158,25 @@ export default function Registro() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  container: { flex: 1, backgroundColor: '#F3F6FA' },
+  contenido: { padding: 25, paddingTop: 45 },
+  icono: { fontSize: 50, textAlign: 'center', marginBottom: 12 },
+  titulo: { fontSize: 25, fontWeight: 'bold', color: '#172B4D', textAlign: 'center' },
+  descripcion: { color: '#64748B', textAlign: 'center', marginTop: 10, marginBottom: 20 },
+  etiqueta: { color: '#334155', fontWeight: 'bold', marginTop: 13, marginBottom: 7 },
+  filaAvatares: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
+  opcionAvatar: {
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: 12,
+    padding: 10,
+    alignItems: 'center',
     flex: 1,
-    backgroundColor: '#F3F6FA',
+    marginHorizontal: 4,
   },
-
-  contenido: {
-    padding: 25,
-    paddingTop: 45,
-  },
-
-  icono: {
-    fontSize: 45,
-    textAlign: 'center',
-    marginBottom: 15,
-  },
-
-  titulo: {
-    fontSize: 25,
-    fontWeight: 'bold',
-    color: '#172B4D',
-    textAlign: 'center',
-  },
-
-  descripcion: {
-    color: '#64748B',
-    textAlign: 'center',
-    marginTop: 10,
-    marginBottom: 20,
-  },
-
-  etiqueta: {
-    color: '#334155',
-    fontWeight: 'bold',
-    marginTop: 13,
-    marginBottom: 7,
-  },
-
+  avatarSeleccionado: { borderColor: '#2456A6', borderWidth: 2, backgroundColor: '#DCE6F5' },
+  textoAvatar: { fontSize: 26 },
   input: {
     backgroundColor: 'white',
     borderWidth: 1,
@@ -178,7 +185,6 @@ const styles = StyleSheet.create({
     padding: 14,
     fontSize: 15,
   },
-
   boton: {
     backgroundColor: '#2456A6',
     padding: 16,
@@ -186,18 +192,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 28,
   },
-
-  textoBoton: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-
-  volver: {
-    color: '#2456A6',
-    textAlign: 'center',
-    marginTop: 20,
-    marginBottom: 25,
-    fontWeight: 'bold',
-  },
+  textoBoton: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+  volver: { color: '#2456A6', textAlign: 'center', marginTop: 20, marginBottom: 25, fontWeight: 'bold' },
 });

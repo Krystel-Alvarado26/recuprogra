@@ -1,18 +1,26 @@
-
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import { useSistema } from '../../data/sistema';
+
+function formatearFecha(fecha: Date) {
+  const dia = String(fecha.getDate()).padStart(2, '0');
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+  const anio = fecha.getFullYear();
+  return `${dia}/${mes}/${anio}`;
+}
 
 export default function Solicitud() {
   const router = useRouter();
+  const { crearPrestamo } = useSistema();
 
   const { id, nombre } = useLocalSearchParams<{
     id: string;
@@ -22,9 +30,21 @@ export default function Solicitud() {
   const [fechaPrestamo, setFechaPrestamo] = useState('');
   const [fechaDevolucion, setFechaDevolucion] = useState('');
 
+  function autocompletarTresDias() {
+    const hoy = new Date();
+    const enTresDias = new Date();
+    enTresDias.setDate(hoy.getDate() + 3);
+    setFechaPrestamo(formatearFecha(hoy));
+    setFechaDevolucion(formatearFecha(enTresDias));
+  }
+
   function solicitarPrestamo() {
-    if (fechaPrestamo.trim() === '' ||
-        fechaDevolucion.trim() === '') {
+    if (!id || !nombre) {
+      Alert.alert('Atención', 'Selecciona un equipo desde el catálogo.');
+      return;
+    }
+
+    if (fechaPrestamo.trim() === '' || fechaDevolucion.trim() === '') {
       Alert.alert('Atención', 'Completa las dos fechas.');
       return;
     }
@@ -35,13 +55,10 @@ export default function Solicitud() {
     if (
       prestamo.length !== 3 ||
       devolucion.length !== 3 ||
-      !prestamo.every(parte => /^\d+$/.test(parte)) ||
-      !devolucion.every(parte => /^\d+$/.test(parte))
+      !prestamo.every((parte) => /^\d+$/.test(parte)) ||
+      !devolucion.every((parte) => /^\d+$/.test(parte))
     ) {
-      Alert.alert(
-        'Fechas incorrectas',
-        'Utiliza el formato DD/MM/AAAA.'
-      );
+      Alert.alert('Fechas incorrectas', 'Utiliza el formato DD/MM/AAAA.');
       return;
     }
 
@@ -88,13 +105,25 @@ export default function Solicitud() {
       return;
     }
 
+    const creado = crearPrestamo(
+      String(id),
+      String(nombre),
+      fechaPrestamo.trim(),
+      fechaDevolucion.trim()
+    );
+
+    if (!creado) {
+      Alert.alert('Atención', 'Inicia sesión como estudiante para solicitar.');
+      return;
+    }
+
     Alert.alert(
-      'Solicitud preparada',
-      'Las fechas son correctas. En la siguiente etapa guardaremos la solicitud y su estado Pendiente.',
+      'Solicitud enviada',
+      'Tu préstamo quedó registrado con estado Pendiente.',
       [
         {
-          text: 'Aceptar',
-          onPress: () => router.replace('../estudiante'),
+          text: 'Ver mis préstamos',
+          onPress: () => router.replace('/estudiante/prestamos'),
         },
       ]
     );
@@ -105,17 +134,13 @@ export default function Solicitud() {
       <View style={styles.contenido}>
         <Text style={styles.icono}>📋</Text>
 
-        <Text style={styles.titulo}>
-          Solicitar préstamo
-        </Text>
+        <Text style={styles.titulo}>Solicitar préstamo</Text>
 
         <Text style={styles.descripcion}>
           Completa los datos de tu solicitud.
         </Text>
 
-        <Text style={styles.etiqueta}>
-          Equipo seleccionado
-        </Text>
+        <Text style={styles.etiqueta}>Equipo seleccionado</Text>
 
         <View style={styles.equipo}>
           <Text style={styles.nombreEquipo}>
@@ -123,9 +148,16 @@ export default function Solicitud() {
           </Text>
         </View>
 
-        <Text style={styles.etiqueta}>
-          Fecha de préstamo
-        </Text>
+        <TouchableOpacity
+          style={styles.atajo}
+          onPress={autocompletarTresDias}
+        >
+          <Text style={styles.textoAtajo}>
+            Usar hoy y devolución en 3 días
+          </Text>
+        </TouchableOpacity>
+
+        <Text style={styles.etiqueta}>Fecha de préstamo</Text>
 
         <TextInput
           style={styles.input}
@@ -134,9 +166,7 @@ export default function Solicitud() {
           onChangeText={setFechaPrestamo}
         />
 
-        <Text style={styles.etiqueta}>
-          Fecha de devolución
-        </Text>
+        <Text style={styles.etiqueta}>Fecha de devolución</Text>
 
         <TextInput
           style={styles.input}
@@ -145,22 +175,15 @@ export default function Solicitud() {
           onChangeText={setFechaDevolucion}
         />
 
-        <TouchableOpacity
-          style={styles.boton}
-          onPress={solicitarPrestamo}
-        >
-          <Text style={styles.textoBoton}>
-            Enviar solicitud
-          </Text>
+        <TouchableOpacity style={styles.boton} onPress={solicitarPrestamo}>
+          <Text style={styles.textoBoton}>Enviar solicitud</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => router.back()}
           style={styles.volver}
         >
-          <Text style={styles.textoVolver}>
-            Cancelar
-          </Text>
+          <Text style={styles.textoVolver}>Cancelar</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -168,55 +191,49 @@ export default function Solicitud() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F3F6FA',
-  },
-
-  contenido: {
-    padding: 25,
-    paddingTop: 45,
-  },
-
-  icono: {
-    fontSize: 45,
-    textAlign: 'center',
-    marginBottom: 15,
-  },
-
+  container: { flex: 1, backgroundColor: '#F3F6FA' },
+  contenido: { padding: 25, paddingTop: 45 },
+  icono: { fontSize: 45, textAlign: 'center', marginBottom: 15 },
   titulo: {
     fontSize: 25,
     fontWeight: 'bold',
     color: '#172B4D',
     textAlign: 'center',
   },
-
   descripcion: {
     color: '#64748B',
     textAlign: 'center',
     marginTop: 10,
     marginBottom: 25,
   },
-
   etiqueta: {
     fontWeight: 'bold',
     color: '#334155',
     marginBottom: 8,
     marginTop: 18,
   },
-
   equipo: {
     backgroundColor: '#DCE6F5',
     padding: 16,
     borderRadius: 10,
   },
-
   nombreEquipo: {
     color: '#172B4D',
     fontWeight: 'bold',
     fontSize: 16,
   },
-
+  atajo: {
+    marginTop: 12,
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: '#E8EEF7',
+    alignItems: 'center',
+  },
+  textoAtajo: {
+    color: '#2456A6',
+    fontWeight: 'bold',
+    fontSize: 13,
+  },
   input: {
     backgroundColor: 'white',
     borderWidth: 1,
@@ -225,7 +242,6 @@ const styles = StyleSheet.create({
     padding: 15,
     fontSize: 15,
   },
-
   boton: {
     backgroundColor: '#2456A6',
     padding: 16,
@@ -233,19 +249,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 30,
   },
-
   textoBoton: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
   },
-
   volver: {
     padding: 15,
     alignItems: 'center',
     marginTop: 10,
   },
-
   textoVolver: {
     color: '#2456A6',
     fontWeight: 'bold',

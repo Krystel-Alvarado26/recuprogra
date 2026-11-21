@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   View,
@@ -8,66 +7,53 @@ import {
   ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSistema } from '../../data/sistema';
 
 export default function Perfil() {
   const router = useRouter();
+  const { estudianteActual } = useSistema();
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.titulo}>Mi perfil</Text>
-        <Text style={styles.subtitulo}>
-          Información del estudiante
-        </Text>
+        <Text style={styles.subtitulo}>Información del estudiante</Text>
       </View>
 
       <View style={styles.contenido}>
         <View style={styles.foto}>
-          <Text style={styles.icono}>👤</Text>
+          <Text style={styles.icono}>{estudianteActual?.foto || '👤'}</Text>
         </View>
 
         <Text style={styles.nombre}>
-          Nombre del estudiante
+          {estudianteActual?.nombre || 'Estudiante'}
         </Text>
 
-        <Text style={styles.rol}>
-          Estudiante
-        </Text>
+        <Text style={styles.rol}>Estudiante</Text>
 
         <View style={styles.tarjeta}>
-          <Text style={styles.etiqueta}>
-            Nombre completo
-          </Text>
+          <Text style={styles.etiqueta}>Nombre completo</Text>
           <Text style={styles.dato}>
-            Nombre del estudiante
+            {estudianteActual?.nombre || 'No registrado'}
           </Text>
 
           <View style={styles.linea} />
 
-          <Text style={styles.etiqueta}>
-            Carnet universitario
-          </Text>
+          <Text style={styles.etiqueta}>Carné universitario</Text>
           <Text style={styles.dato}>
-            Pendiente de registrar
+            {estudianteActual?.carnet || 'No registrado'}
           </Text>
 
           <View style={styles.linea} />
 
-          <Text style={styles.etiqueta}>
-            Carrera
-          </Text>
+          <Text style={styles.etiqueta}>Carrera</Text>
           <Text style={styles.dato}>
-            Ingeniería en Sistemas
+            {estudianteActual?.carrera || 'No registrada'}
           </Text>
         </View>
 
-        <TouchableOpacity
-          style={styles.boton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.textoBoton}>
-            Volver al inicio
-          </Text>
+        <TouchableOpacity style={styles.boton} onPress={() => router.back()}>
+          <Text style={styles.textoBoton}>Volver al inicio</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -75,11 +61,7 @@ export default function Perfil() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F3F6FA',
-  },
-
+  container: { flex: 1, backgroundColor: '#F3F6FA' },
   header: {
     backgroundColor: '#172B4D',
     padding: 30,
@@ -87,23 +69,9 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
-
-  titulo: {
-    color: 'white',
-    fontSize: 25,
-    fontWeight: 'bold',
-  },
-
-  subtitulo: {
-    color: '#D8E3F0',
-    marginTop: 8,
-  },
-
-  contenido: {
-    padding: 22,
-    alignItems: 'center',
-  },
-
+  titulo: { color: 'white', fontSize: 25, fontWeight: 'bold' },
+  subtitulo: { color: '#D8E3F0', marginTop: 8 },
+  contenido: { padding: 22, alignItems: 'center' },
   foto: {
     backgroundColor: '#DCE6F5',
     width: 110,
@@ -113,23 +81,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 20,
   },
-
-  icono: {
-    fontSize: 55,
-  },
-
-  nombre: {
-    fontSize: 21,
-    fontWeight: 'bold',
-    color: '#172B4D',
-    marginTop: 15,
-  },
-
-  rol: {
-    color: '#64748B',
-    marginTop: 5,
-  },
-
+  icono: { fontSize: 55 },
+  nombre: { fontSize: 21, fontWeight: 'bold', color: '#172B4D', marginTop: 15 },
+  rol: { color: '#64748B', marginTop: 5 },
   tarjeta: {
     backgroundColor: 'white',
     width: '100%',
@@ -138,25 +92,9 @@ const styles = StyleSheet.create({
     marginTop: 30,
     elevation: 2,
   },
-
-  etiqueta: {
-    color: '#64748B',
-    fontSize: 13,
-    marginBottom: 6,
-  },
-
-  dato: {
-    color: '#172B4D',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-
-  linea: {
-    height: 1,
-    backgroundColor: '#E2E8F0',
-    marginVertical: 18,
-  },
-
+  etiqueta: { color: '#64748B', fontSize: 13, marginBottom: 6 },
+  dato: { color: '#172B4D', fontSize: 16, fontWeight: 'bold' },
+  linea: { height: 1, backgroundColor: '#E2E8F0', marginVertical: 18 },
   boton: {
     backgroundColor: '#2456A6',
     padding: 15,
@@ -165,9 +103,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 25,
   },
-
-  textoBoton: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
+  textoBoton: { color: 'white', fontWeight: 'bold' },
 });
